@@ -4,9 +4,10 @@ node_modules
 # Turbo
 .turbo
 
-# VSC
+# IDE
 .vscode/*
 !.vscode/settings.json
+.idea
 
 # DFX
 .dfx
