@@ -153,21 +153,23 @@ type ProfileFormProps = {
 
 function ProfileForm(props: ProfileFormProps): JSX.Element {
   const backend = useRestActor("backend", props.identity);
-  const [username, setUsername] = useState("");
-  const [bio, setBio] = useState("");
+  const [userPayment, setUserPayment] = useState<User>({
+    type: 'friend',
+    name: '',
+    email: ''
+  });
 
-  const handleUsernameChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setUsername(e.target.value);
-  };
-
-  const handleBioChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setBio(e.target.value);
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setUserPayment({
+      ...userPayment,
+      [e.target.name]: e.target.value
+    });
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!username || !bio) {
+    if (!userPayment.email || !userPayment.name) {
       alert("Please fill all fields");
       return;
     }
@@ -176,7 +178,7 @@ function ProfileForm(props: ProfileFormProps): JSX.Element {
       props.loading && props.setLoading(true);
       const response = await backend.post<CreateProfileResponse>(
         "/users",
-        { username, bio },
+        userPayment,
         {
           headers: {
             "Content-Type": "application/json",
@@ -199,23 +201,23 @@ function ProfileForm(props: ProfileFormProps): JSX.Element {
           Username:
         </label>
         <input
-          id="name"
+          name="name"
           type="text"
           className="w-full border border-gray-300 rounded-md py-2 px-3 text-gray-700 focus:outline-none focus:border-blue-500"
-          value={username}
-          onChange={handleUsernameChange}
+          value={userPayment.name}
+          onChange={handleChange}
         />
       </div>
       <div className="mb-4">
         <label htmlFor="email" className="block text-gray-700 font-bold mb-2">
-          Bio:
+          Email:
         </label>
         <input
-          id="email"
+          name="email"
           type="text"
           className="w-full border border-gray-300 rounded-md py-2 px-3 text-gray-700 focus:outline-none focus:border-blue-500"
-          value={bio}
-          onChange={handleBioChange}
+          value={userPayment.email}
+          onChange={handleChange}
         />
       </div>
       <button

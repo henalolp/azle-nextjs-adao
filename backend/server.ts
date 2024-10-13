@@ -3,6 +3,12 @@ import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
 
 import { Database } from "./database";
+
+import { EventEntity } from "./database/entities/event";
+import { PaymentEntity } from "./database/entities/payment";
+import { PersonalPaymentEntity } from "./database/entities/personal_payment";
+import { ProjectEntity } from "./database/entities/project";
+import { TaskEntity } from "./database/entities/task";
 import { UserEntity } from "./database/entities/user";
 
 export type CreateServerOptions = {

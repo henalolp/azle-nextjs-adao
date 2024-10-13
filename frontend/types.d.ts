@@ -1,5 +1,5 @@
 export type User = {
-  id: number
+  id?: number
   type: 'friend' | 'member' | 'admin'
   name: string
   email: string
@@ -11,7 +11,7 @@ export type User = {
 
 export type Project = {
   owners: User['id'][]
-  tasks: Taskp['id']
+  tasks: Task['id']
   dueDate: Date
   progress: number
   budget: number
