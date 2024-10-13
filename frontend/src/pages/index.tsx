@@ -4,12 +4,8 @@ import React, { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
 import { useAuth, useRestActor } from "@bundly/ares-react";
 
-type Profile = {
-  id: number;
-  principal: string;
-  username: string;
-  bio: string;
-};
+import { User, PersonalPayment, Payment, Profile } from "../../types";
+
 
 export default function IcConnectPage(): JSX.Element {
   const { isAuthenticated, currentIdentity } = useAuth();
