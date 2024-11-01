@@ -3,12 +3,6 @@ import cors from "cors";
 import express, { NextFunction, Request, Response } from "express";
 
 import { Database } from "./database";
-
-import { EventEntity } from "./database/entities/event";
-import { PaymentEntity } from "./database/entities/payment";
-import { PersonalPaymentEntity } from "./database/entities/personal_payment";
-import { ProjectEntity } from "./database/entities/project";
-import { TaskEntity } from "./database/entities/task";
 import { UserEntity } from "./database/entities/user";
 
 export type CreateServerOptions = {
@@ -21,71 +15,79 @@ export function CreateServer({ database }: CreateServerOptions) {
   app.use(cors());
   app.use(express.json());
 
-  app.use(function (err: Error, req: Request, res: Response, next: NextFunction) {
-    console.error(err.message);
-    res.status(500).send("Something broke!");
+  // Global error handler
+  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+    console.error("Error:", err.message);
+    res.status(500).send("Internal Server Error");
   });
 
+  // Authentication guard middleware
   function AuthGuard(req: Request, res: Response, next: NextFunction) {
     if (ic.caller().isAnonymous()) {
-      res.status(401);
-      res.send("You are not authorized to access this resource.");
+      res.status(401).send("Unauthorized access");
     } else {
       next();
     }
   }
 
+  // Health check endpoint
   app.get("/health", (req, res) => {
-    res.send().statusCode = 204;
+    res.sendStatus(204);
   });
 
-  app.get("/users", async (req, res) => {
+  // Helper function to get user repository
+  async function getUserRepository() {
     const dataSource = await database.getDataSource();
-    const userRepository = dataSource.getRepository(UserEntity);
-    const users = await userRepository.find();
-    res.json(users);
+    return dataSource.getRepository(UserEntity);
+  }
+
+  // Get all users
+  app.get("/users", async (req, res) => {
+    try {
+      const userRepository = await getUserRepository();
+      const users = await userRepository.find();
+      res.json(users);
+    } catch (error: any) {
+      res.status(400).send("Error fetching users: " + error.message);
+    }
   });
 
+  // Get current user
   app.get("/users/me", AuthGuard, async (req, res) => {
     try {
-      const dataSource = await database.getDataSource();
-      const userRepository = dataSource.getRepository(UserEntity);
+      const userRepository = await getUserRepository();
       const user = await userRepository.findOneBy({ principal: ic.caller().toString() });
 
       if (!user) {
-        res.status(404);
-        res.send("User not found.");
+        res.status(404).send("User not found");
       } else {
         res.json(user);
       }
     } catch (error: any) {
-      res.status(400);
-      res.send(error.message);
+      res.status(400).send("Error fetching user: " + error.message);
     }
   });
 
+  // Get user by ID
   app.get("/users/:id", async (req, res) => {
     try {
-      const dataSource = await database.getDataSource();
-      const userRepository = dataSource.getRepository(UserEntity);
-      const user = await userRepository.findOneBy({ id: req.body.id });
+      const userRepository = await getUserRepository();
+      const user = await userRepository.findOneBy({ id: req.params.id });
 
       if (!user) {
-        res.status(404);
-        res.send("User not found.");
+        res.status(404).send("User not found");
       } else {
         res.json(user);
       }
     } catch (error: any) {
-      res.status(400);
-      res.send(error.message);
+      res.status(400).send("Error fetching user: " + error.message);
     }
   });
 
+  // Create new user
   app.post("/users", AuthGuard, async (req: Request, res) => {
     try {
-      const dataSource = await database.getDataSource();
-      const userRepository = dataSource.getRepository(UserEntity);
+      const userRepository = await getUserRepository();
 
       const newUser = {
         principal: ic.caller().toString(),
@@ -94,10 +96,9 @@ export function CreateServer({ database }: CreateServerOptions) {
       };
 
       const user = await userRepository.save(newUser);
-      res.json(user);
+      res.status(201).json(user);
     } catch (error: any) {
-      res.status(400);
-      res.send(error.message);
+      res.status(400).send("Error creating user: " + error.message);
     }
   });
 
